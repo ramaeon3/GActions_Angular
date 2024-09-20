@@ -12,7 +12,7 @@ jobs:
       - name: Install dependencies
         run: |
           echo "Installing dependencies"          
-          npm insatll
+          npm install
           echo "Installing the dependencies successfully"
       - name: Lint the code
         run: |
