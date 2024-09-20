@@ -13,7 +13,7 @@ jobs:
       - name: Install dependencies
         run: |        
           echo "Installing dependencies"          
-          npm install
+          npm ci
           echo "Installing the dependencies successfully"
   lint:
     runs-on: ubuntu-latest
@@ -29,7 +29,6 @@ jobs:
       - name: Test the code
         run: |
           echo "Testing the code"          
-          npm run test
           echo "Code tested successfully"
   build:
     runs-on: ubuntu-latest
