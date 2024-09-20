@@ -1,8 +1,5 @@
 name: Deployment Execution 1
-on:
-  push:
-    branches:
-      - main  # Set the branch name to main
+on: workflow_dispatch
 jobs:
   deploy:
     runs-on: ubuntu-latest
