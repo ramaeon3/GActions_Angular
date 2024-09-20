@@ -15,6 +15,7 @@ jobs:
           echo "Installing dependencies"          
           npm install
           echo "Installing the dependencies successfully"
+        working-directory: ./GActions_Angular 
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +24,7 @@ jobs:
           echo "Linting the code"
           echo "Code linted successfully"
           npm run lint
+        working-directory: ./GActions_Angular 
   test:
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +40,7 @@ jobs:
           echo "Building the code"
           npm run build
           echo "Code built successfully"
+        working-directory: ./GActions_Angular 
   deploy:
     runs-on: ubuntu-latest
     steps:  
