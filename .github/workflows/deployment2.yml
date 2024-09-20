@@ -1,4 +1,4 @@
-name: Deployment Execution 1
+name: Deployment Multi Job Execution
 on: workflow_dispatch
 jobs:
   fetch:
