@@ -13,7 +13,7 @@ jobs:
       - name: Install dependencies
         run: |        
           echo "Installing dependencies"          
-          npm ci
+          npm install
           echo "Installing the dependencies successfully"
   lint:
     runs-on: ubuntu-latest
