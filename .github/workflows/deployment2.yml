@@ -1,51 +1,63 @@
 name: Deployment Multi Job Execution
 on: workflow_dispatch
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
-      
+
   install:
     runs-on: ubuntu-latest
+    needs: fetch
     steps:
       - name: Install dependencies
         run: |        
           echo "Installing dependencies"          
           npm install
           echo "Installing the dependencies successfully"
-        working-directory: ./GActions_Angular 
+        
+
   lint:
     runs-on: ubuntu-latest
+    needs: install
     steps:
       - name: Lint the code
         run: |
           echo "Linting the code"
           echo "Code linted successfully"
           npm run lint
-        working-directory: ./GActions_Angular 
+        
+
   test:
     runs-on: ubuntu-latest
+    needs: lint
     steps:
       - name: Test the code
         run: |
           echo "Testing the code"          
+          npm test  # Ensure you have a test script in package.json
           echo "Code tested successfully"
+        
+
   build:
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Build the code
         run: |
           echo "Building the code"
           npm run build
           echo "Code built successfully"
-        working-directory: ./GActions_Angular 
+        
+
   deploy:
     runs-on: ubuntu-latest
+    needs: build
     steps:  
       - name: Deploy the code
         run: |
           echo "Deploying the code"
           echo "Code deployed successfully"
-
+        
