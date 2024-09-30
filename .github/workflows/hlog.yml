@@ -1,0 +1,82 @@
+name: Process HLOG Files
+
+on:
+  workflow_dispatch:
+    inputs:
+      logs_zip:
+        description: 'Upload logs.zip file'
+        required: true
+        type: 'string'
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Upload logs.zip
+        id: upload_logs
+        uses: actions/upload-artifact@v2
+        with:
+          name: logs.zip
+          path: ${{ github.event.inputs.logs_zip }}
+
+      - name: Check for running container
+        id: check_container
+        run: |
+          running=$(docker container ls | grep edge_container || echo false)
+          echo "running=$running" >> $GITHUB_ENV
+
+      - name: Stop and remove existing container
+        if: env.running != 'false'
+        run: |
+          docker stop edge_container || true
+          docker container rm edge_container || true
+
+      - name: Get Docker Image Tag
+        id: get_image_tag
+        run: |
+          IMAGELS=$(docker image ls | grep minestar | grep -v artifacts | head -n1)
+          REGX='^minestar/onboard-edge-archive +([0-9]+)'
+          if [[ $IMAGELS =~ $REGX ]]; then
+            TAG="minestar/onboard-edge-archive:${BASH_REMATCH[1]}"
+            echo "tag=$TAG" >> $GITHUB_ENV
+          else
+            echo "No valid image found."
+            exit 1
+          fi
+
+      - name: Run Docker Container
+        run: |
+          docker run --name edge_container -v ${{ github.workspace }}/HLOG:/tmp/HLOG -d ${{ env.tag }}
+          sleep 1
+
+      - name: Unzip logs.zip
+        run: |
+          if [[ -f ${{ github.workspace }}/HLOG/logs.zip ]]; then
+            cd ${{ github.workspace }}/HLOG
+            unzip logs.zip
+            rm logs.zip
+            cd ..
+          fi
+
+      - name: Execute Docker Commands
+        run: |
+          docker exec edge_container sh -c "/opt/msLite/bin/hlogindex -p /tmp/HLOG"
+          docker exec edge_container sh -c "/opt/msLite/bin/infrastructureReport /tmp/HLOG/TransmissionTimeIndex00000.hlog -o /tmp/HLOG"
+          docker exec edge_container sh -c "/opt/msLite/bin/printLoggerOutput /tmp/HLOG/TransmissionTimeIndex00000.hlog > /tmp/HLOG/logs.txt"
+
+          if [[ -n "${{ secrets.SCS_Datum }}" && -n "${{ secrets.SCS_Channel }}" ]]; then
+            docker exec edge_container sh -c "/opt/msLite/bin/playbackToCsv --fullPath /tmp/HLOG/TransmissionTimeIndex00000.hlog --type ${{ secrets.SCS_Datum }} --channel ${{ secrets.SCS_Channel }} --outdir /tmp/HLOG"
+          elif [[ -n "${{ secrets.SCS_Datum }}" ]]; then
+            docker exec edge_container sh -c "/opt/msLite/bin/playbackToCsv --fullPath /tmp/HLOG/TransmissionTimeIndex00000.hlog --type ${{ secrets.SCS_Datum }} --outdir /tmp/HLOG"
+          fi
+
+          docker exec edge_container sh -c "chmod -R 777 /tmp/HLOG/*"
+
+      - name: Stop and remove container
+        run: |
+          docker stop edge_container || true
+          docker container rm edge_container || true
